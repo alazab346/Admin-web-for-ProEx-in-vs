@@ -1086,6 +1086,65 @@ margin:auto;
   .desktop-menu { display: none; }
   .mobile-menu { display: block; }
 }
+
+/* --- Enhanced Responsive Design --- */
+@media (max-width: 1200px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    max-width: 1000px;
+  }
+  .page-title { font-size: 32px; }
+}
+
+@media (max-width: 992px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-width: 800px;
+  }
+  .page-title { font-size: 26px; }
+  .sidebar-logo img { height: 50px; }
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 200;
+    width: 220px;
+    background: var(--bg2);
+    height: 100vh;
+    overflow-y: auto;
+  }
+  #sidebar.open {
+    transform: translateX(0);
+  }
+  #main {
+    margin-left: 0;
+  }
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    gap: 12px;
+  }
+  .page-title { font-size: 22px; }
+  .page-subtitle { font-size: 13px; }
+  .topbar-search { display: none; }
+  .desktop-menu { display: none; }
+  .mobile-menu { display: block; }
+  .table-header, .table-title, .table-controls { flex-direction: column; gap: 6px; }
+  .stat-card { min-width: 0; }
+  .sidebar-logo img { height: 36px; }
+  .btn { font-size: 13px; padding: 8px 12px; }
+}
+
+@media (max-width: 480px) {
+  body { font-size: 14px; }
+  .dashboard-cards { gap: 8px; }
+  .page-title { font-size: 16px; }
+  .btn { font-size: 12px; padding: 7px 10px; }
+  .sidebar-logo img { height: 28px; }
+  .login-card { padding: 18px; }
+}
 </style>
 <body>
 
@@ -1114,8 +1173,9 @@ margin:auto;
 
 <!-- ─── SIDEBAR ─── -->
 <nav id="sidebar">
-  <div class="sidebar-logo">
+  <div class="sidebar-logo" style="position:relative;">
     <img src="ProEx_logo.png" style="height: 75px; object-fit: contain;">
+    <button id="sidebarCloseBtn" aria-label="Close sidebar" style="display:none;position:absolute;top:18px;right:18px;background:none;border:none;font-size:28px;color:#fff;z-index:201;cursor:pointer;">&times;</button>
   </div>
 
   <div class="sidebar-nav">
@@ -1206,20 +1266,15 @@ margin:auto;
 <!-- ─── MAIN ─── -->
 <div id="main">
   <!-- TOPBAR -->
-  <header id="topbar">
-    <button onclick="toggleSidebar()" class="topbar-btn" style="display:none" id="menu-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
+  <header id="topbar" style="position:relative;z-index:10;">
+    <button id="sidebarOpenBtn" aria-label="Open sidebar" style="background:none;border:none;font-size:28px;color:#2A8A8B;cursor:pointer;display:none;margin-right:12px;vertical-align:middle;">&#9776;</button>
     <div class="topbar-title" id="topbar-title">Admin Dashboard</div>
-
-   
-   <div class="lang-toggle" onclick="toggleLanguage()">
-<span id="langLabel">AR</span>
-</div>
-
+    <div class="lang-toggle" onclick="toggleLanguage()">
+      <span id="langLabel">AR</span>
+    </div>
     <div class="topbar-search">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="globalSearch" placeholder="Search anything..." oninput="globalSearch()">
+      <input type="text" id="globalSearch" placeholder="Search anything..." oninput="globalSearch()">
     </div>
     <div class="topbar-actions">
       <div class="topbar-btn">
@@ -1231,6 +1286,52 @@ margin:auto;
       </div>
     </div>
   </header>
+  <!-- Sidebar Overlay for mobile/tablet -->
+  <div id="sidebarOverlay" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,0.35);transition:opacity 0.2s;"></div>
+
+<script>
+// Sidebar open/close logic for mobile/tablet
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
+const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+
+function openSidebar() {
+  sidebar.classList.add('open');
+  sidebarOverlay.style.display = 'block';
+  if (sidebarCloseBtn) sidebarCloseBtn.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebarOverlay.style.display = 'none';
+  if (sidebarCloseBtn) sidebarCloseBtn.style.display = 'none';
+  document.body.style.overflow = '';
+}
+if (sidebarOpenBtn && sidebarCloseBtn && sidebarOverlay) {
+  sidebarOpenBtn.onclick = openSidebar;
+  sidebarCloseBtn.onclick = closeSidebar;
+  sidebarOverlay.onclick = closeSidebar;
+  // Auto-close sidebar on scroll/tap outside
+  window.addEventListener('scroll', function() {
+    if (window.innerWidth <= 768 && sidebar.classList.contains('open')) closeSidebar();
+  });
+}
+// Show/hide sidebar open button on mobile/tablet
+function updateSidebarBtn() {
+  if (window.innerWidth <= 768) {
+    if (sidebarOpenBtn) sidebarOpenBtn.style.display = 'inline-block';
+  } else {
+    if (sidebarOpenBtn) sidebarOpenBtn.style.display = 'none';
+    if (sidebarCloseBtn) sidebarCloseBtn.style.display = 'none';
+    if (sidebarOverlay) sidebarOverlay.style.display = 'none';
+    sidebar.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+window.addEventListener('resize', updateSidebarBtn);
+window.addEventListener('DOMContentLoaded', updateSidebarBtn);
+</script>
 
   <!-- CONTENT -->
   <main id="content">
